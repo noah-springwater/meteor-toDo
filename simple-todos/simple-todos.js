@@ -12,7 +12,7 @@ if (Meteor.isServer) {
     });
   });
 }
- 
+
 if (Meteor.isClient) {
   // This code only runs on the client
   Meteor.subscribe("tasks");
@@ -42,13 +42,13 @@ if (Meteor.isClient) {
     "submit .new-task": function (event) {
       // Prevent default browser form submit
       event.preventDefault();
- 
+
       // Get value from form element
       var text = event.target.text.value;
- 
+
       // Insert a task into the collection
       Meteor.call("addTask", text);
- 
+
       // Clear form
       event.target.text.value = "";
     },
@@ -98,9 +98,21 @@ if (Meteor.isClient) {
     });
   },
   deleteTask: function (taskId) {
+    var task = Tasks.findOne(taskId);
+    if (task.private && task.owner !== Meteor.userId()) {
+      //if the task is private, make sure only the owner can delete it
+      throw new Meteor.Error("not-authorized");
+    }
+
     Tasks.remove(taskId);
   },
   setChecked: function (taskId, setChecked) {
+    var task = Tasks.findOne(taskId);
+    if (task.private && task.owner !== Meteor.userId()) {
+      //If the task is private, make sure only the owner can check it off
+      throw new Meteor.Error("not-authorized");
+    }
+    
     Tasks.update(taskId, { $set: { checked: setChecked} });
   },
   setPrivate: function (taskId, setToPrivate) {
